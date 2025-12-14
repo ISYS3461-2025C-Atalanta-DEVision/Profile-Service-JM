@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "kafka.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class UserCreatedEventConsumer {
 
     private final ProfileRepository profileRepository;
