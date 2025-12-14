@@ -1,0 +1,17 @@
+# Profile Service - Render Deployment Configuration
+# Activate with: --spring.profiles.active=render
+
+spring:
+  # Kafka Configuration (A.3.2) - Internal Render network
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: profile-service-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+logging:
+  level:
+    org.springframework.kafka: INFO

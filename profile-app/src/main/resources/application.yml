@@ -1,0 +1,69 @@
+# Profile Service Configuration
+# Default profile - uses environment variables for production
+
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: profile-service
+
+  # MongoDB Configuration
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/profile_db}
+      database: ${MONGODB_DATABASE:profile_db}
+
+  # Kafka Configuration (A.3.2 - Microservice Communication)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:profile-service-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  # Mail Configuration (6.1.2)
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# Application Configuration
+app:
+  name: ${APP_NAME:JobMatch}
+  subscription:
+    upgrade-url: ${SUBSCRIPTION_UPGRADE_URL:https://jobmatch.com/subscription/upgrade}
+    notification:
+      cron: ${SUBSCRIPTION_NOTIFICATION_CRON:0 0 9 * * ?}
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.devision.jm.profile: DEBUG
+    org.springframework.kafka: INFO
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
