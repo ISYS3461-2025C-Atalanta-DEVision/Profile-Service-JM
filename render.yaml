@@ -11,9 +11,9 @@ services:
     plan: free  # Options: free, starter, standard, pro
     healthCheckPath: /actuator/health
     envVars:
-      # Server Port (Render sets this automatically)
-      - key: SERVER_PORT
-        value: "8082"
+      # Spring Profile
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
 
       # MongoDB Connection (set in Render dashboard)
       - key: MONGODB_URI
@@ -27,7 +27,13 @@ services:
       - key: KAFKA_CONSUMER_GROUP
         value: profile-service-group
 
-      # Mail Configuration (optional - set if using email notifications)
+      # Eureka Server URL (Service Discovery)
+      - key: EUREKA_URL
+        sync: false
+      - key: EUREKA_ENABLED
+        value: "true"
+
+      # Mail Configuration (optional)
       - key: MAIL_HOST
         sync: false
       - key: MAIL_PORT
