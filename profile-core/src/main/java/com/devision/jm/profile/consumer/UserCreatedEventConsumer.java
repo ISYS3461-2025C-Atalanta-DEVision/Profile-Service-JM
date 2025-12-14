@@ -42,7 +42,11 @@ public class UserCreatedEventConsumer {
      * Topic: user-created
      * Group: profile-service-group
      */
-    @KafkaListener(topics = "user-created", groupId = "${spring.kafka.consumer.group-id:profile-service-group}")
+    @KafkaListener(
+            topics = "user-created",
+            groupId = "${spring.kafka.consumer.group-id:profile-service-group}",
+            autoStartup = "${kafka.consumer.auto-startup:true}"
+    )
     @Transactional
     public void consumeUserCreatedEvent(String message) {
         log.info("Received user-created event: {}", message);

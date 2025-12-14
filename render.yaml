@@ -22,8 +22,10 @@ services:
         value: profile_db
 
       # Kafka Configuration (Internal Render network)
+      - key: KAFKA_ENABLED
+        value: "false"  # Set to "true" when Kafka is configured
       - key: KAFKA_BOOTSTRAP_SERVERS
-        value: kafka:9092
+        sync: false  # Set to your Kafka service hostname (e.g., kafka-service:9092)
       - key: KAFKA_CONSUMER_GROUP
         value: profile-service-group
 
