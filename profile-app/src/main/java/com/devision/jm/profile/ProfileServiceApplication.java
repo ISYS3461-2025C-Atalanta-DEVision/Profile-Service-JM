@@ -1,5 +1,8 @@
 package com.devision.jm.profile;
 
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
@@ -26,12 +29,23 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * Default port: 8082 (to avoid conflict with Auth Service on 8081)
  */
+@Slf4j
 @SpringBootApplication(exclude = KafkaAutoConfiguration.class)
 @EnableMongoAuditing
 @EnableScheduling
 public class ProfileServiceApplication {
 
+    @Value("${kafka.enabled:NOT_SET}")
+    private String kafkaEnabled;
+
     public static void main(String[] args) {
         SpringApplication.run(ProfileServiceApplication.class, args);
+    }
+
+    @PostConstruct
+    public void init() {
+        log.info("========== PROFILE SERVICE STARTED ==========");
+        log.info("kafka.enabled = {}", kafkaEnabled);
+        log.info("==============================================");
     }
 }

@@ -167,9 +167,7 @@ public class ProfileServiceImpl implements ProfileApi {
                 .phoneNumber(request.getPhoneNumber())
                 .avatarUrl(request.getAvatarUrl())
                 .authProvider(request.getAuthProvider())
-                .subscriptionType(SubscriptionType.FREE_TRIAL)
-                .subscriptionStartDate(LocalDateTime.now())
-                .subscriptionEndDate(LocalDateTime.now().plusDays(14))
+                .subscriptionType(SubscriptionType.FREE)
                 .build();
 
         Profile savedProfile = profileRepository.save(profile);
