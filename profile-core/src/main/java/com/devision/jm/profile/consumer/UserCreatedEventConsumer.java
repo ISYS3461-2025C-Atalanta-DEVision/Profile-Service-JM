@@ -78,10 +78,8 @@ public class UserCreatedEventConsumer {
                     .phoneNumber(event.getPhoneNumber())
                     .avatarUrl(event.getAvatarUrl())
                     .authProvider(event.getAuthProvider())
-                    // Set up 14-day free trial (6.1.1)
-                    .subscriptionType(SubscriptionType.FREE_TRIAL)
-                    .subscriptionStartDate(LocalDateTime.now())
-                    .subscriptionEndDate(LocalDateTime.now().plusDays(14))
+                    // New users start with FREE subscription (6.1.1)
+                    .subscriptionType(SubscriptionType.FREE)
                     .build();
 
             // Save to database

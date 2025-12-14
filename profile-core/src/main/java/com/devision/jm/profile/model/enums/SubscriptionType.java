@@ -7,11 +7,9 @@ package com.devision.jm.profile.model.enums;
  * Updated via Kafka events from Payment Service.
  *
  * Implements requirements:
- * - 6.1.1: Subscription tiers (Free trial, Monthly, Yearly)
+ * - 6.1.1: Free and Premium subscription tiers
  */
 public enum SubscriptionType {
-    FREE_TRIAL,    // 14-day free trial
-    MONTHLY,       // Monthly subscription
-    YEARLY,        // Yearly subscription (discounted)
-    EXPIRED        // Subscription has expired
+    FREE,      // Free tier (no subscription)
+    PREMIUM    // Premium subscription ($30/month)
 }

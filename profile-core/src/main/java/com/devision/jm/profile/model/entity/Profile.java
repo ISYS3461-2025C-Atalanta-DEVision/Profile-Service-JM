@@ -125,7 +125,7 @@ public class Profile extends BaseEntity {
 
     @Field("subscription_type")
     @Builder.Default
-    private SubscriptionType subscriptionType = SubscriptionType.FREE_TRIAL;
+    private SubscriptionType subscriptionType = SubscriptionType.FREE;
 
     @Field("subscription_start_date")
     private LocalDateTime subscriptionStartDate;
@@ -164,35 +164,35 @@ public class Profile extends BaseEntity {
     // ==================== Helper Methods ====================
 
     /**
-     * Check if subscription is active
+     * Check if subscription is active (only for PREMIUM users)
      */
     public boolean isSubscriptionActive() {
-        if (subscriptionType == SubscriptionType.EXPIRED) {
-            return false;
+        if (subscriptionType != SubscriptionType.PREMIUM) {
+            return false;  // FREE users don't have an active subscription
         }
         if (subscriptionEndDate == null) {
-            return true;  // No end date means active (e.g., during free trial setup)
+            return true;  // PREMIUM with no end date is active
         }
         return LocalDateTime.now().isBefore(subscriptionEndDate);
     }
 
     /**
-     * Get days remaining in subscription
+     * Get days remaining in subscription (only for PREMIUM users)
+     * Returns null for FREE users
      */
-    public long getDaysRemaining() {
-        if (subscriptionEndDate == null) {
-            return -1;  // Unknown
+    public Long getDaysRemaining() {
+        if (subscriptionType != SubscriptionType.PREMIUM || subscriptionEndDate == null) {
+            return null;  // No days remaining for FREE users
         }
         long days = java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), subscriptionEndDate);
         return Math.max(0, days);
     }
 
     /**
-     * Check if this is a premium subscriber (not free trial)
+     * Check if this is a premium subscriber
      */
     public boolean isPremiumSubscriber() {
-        return isSubscriptionActive() &&
-                (subscriptionType == SubscriptionType.MONTHLY || subscriptionType == SubscriptionType.YEARLY);
+        return subscriptionType == SubscriptionType.PREMIUM && isSubscriptionActive();
     }
 
     /**
