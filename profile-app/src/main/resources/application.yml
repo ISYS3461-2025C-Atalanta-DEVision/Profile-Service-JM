@@ -16,7 +16,7 @@ spring:
 
   # Kafka Configuration (A.3.2 - Microservice Communication)
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP:profile-service-group}
       auto-offset-reset: earliest
@@ -62,10 +62,9 @@ app:
     notification:
       cron: ${SUBSCRIPTION_NOTIFICATION_CRON:0 0 9 * * ?}
 
-# Kafka Consumer Configuration
+# Kafka Feature Toggle
 kafka:
-  consumer:
-    auto-startup: ${KAFKA_ENABLED:true}
+  enabled: ${KAFKA_ENABLED:false}
 
 # Logging Configuration
 logging:

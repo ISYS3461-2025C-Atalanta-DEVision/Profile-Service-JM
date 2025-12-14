@@ -3,6 +3,7 @@ package com.devision.jm.profile.config;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -16,14 +17,17 @@ import java.util.Map;
  * Kafka Configuration
  *
  * Configures Kafka consumer for receiving events from Auth Service.
+ * Only loaded when kafka.enabled=true (KAFKA_ENABLED env var).
  *
  * Implements Microservice Architecture (A.3.2):
  * - Communication among microservices via Message Broker (Kafka)
  *
  * Environment Variables:
+ * - KAFKA_ENABLED: Enable Kafka (default: false)
  * - KAFKA_BOOTSTRAP_SERVERS: Kafka broker addresses (default: localhost:9092)
  */
 @Configuration
+@ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")

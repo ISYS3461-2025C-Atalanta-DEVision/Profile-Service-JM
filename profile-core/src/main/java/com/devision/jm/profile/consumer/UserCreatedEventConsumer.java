@@ -7,6 +7,7 @@ import com.devision.jm.profile.repository.ProfileRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
  *
  * Listens to the "user-created" topic from Auth Service.
  * Creates a new Profile document when a user registers.
+ * Only loaded when kafka.enabled=true (KAFKA_ENABLED env var).
  *
  * Microservice Architecture (A.3.2):
  * - Consumes events from Auth Service via Kafka
@@ -31,6 +33,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class UserCreatedEventConsumer {
 
     private final ProfileRepository profileRepository;

@@ -2,6 +2,7 @@ package com.devision.jm.profile;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -17,10 +18,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Features enabled:
  * - MongoDB Auditing: For createdAt/updatedAt timestamps
  * - Scheduling: For subscription notification jobs (6.1.2)
+ * - Kafka: Conditionally enabled via KAFKA_ENABLED env var
  *
  * Default port: 8082 (to avoid conflict with Auth Service on 8081)
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = KafkaAutoConfiguration.class)
 @EnableMongoAuditing
 @EnableScheduling
 public class ProfileServiceApplication {
