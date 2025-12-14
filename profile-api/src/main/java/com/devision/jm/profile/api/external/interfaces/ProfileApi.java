@@ -1,5 +1,6 @@
 package com.devision.jm.profile.api.external.interfaces;
 
+import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
 
@@ -49,4 +50,13 @@ public interface ProfileApi {
      * @return List of matching profiles
      */
     List<ProfileResponse> searchProfiles(String searchTerm);
+
+    /**
+     * Create profile for existing user
+     * Used for users who registered before Kafka was enabled
+     *
+     * @param request Profile creation request
+     * @return Created profile response
+     */
+    ProfileResponse createProfile(ProfileCreateRequest request);
 }

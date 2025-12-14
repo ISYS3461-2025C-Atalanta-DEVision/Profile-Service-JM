@@ -2,6 +2,7 @@ package com.devision.jm.profile.service.impl;
 
 import com.devision.jm.profile.api.external.dto.ApplicantSearchProfileDto;
 import com.devision.jm.profile.api.external.dto.MediaItemDto;
+import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
 import com.devision.jm.profile.api.external.interfaces.ProfileApi;
@@ -142,6 +143,40 @@ public class ProfileServiceImpl implements ProfileApi {
         return profiles.stream()
                 .map(this::toProfileResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse createProfile(ProfileCreateRequest request) {
+        log.info("Creating profile for userId: {}, email: {}", request.getUserId(), request.getEmail());
+
+        // Check if profile already exists
+        if (profileRepository.existsByUserId(request.getUserId())) {
+            log.warn("Profile already exists for userId: {}", request.getUserId());
+            throw new RuntimeException("Profile already exists for userId: " + request.getUserId());
+        }
+
+        // Create new profile with 14-day free trial
+        Profile profile = Profile.builder()
+                .userId(request.getUserId())
+                .email(request.getEmail())
+                .companyName(request.getCompanyName())
+                .country(request.getCountry())
+                .city(request.getCity())
+                .streetAddress(request.getStreetAddress())
+                .phoneNumber(request.getPhoneNumber())
+                .avatarUrl(request.getAvatarUrl())
+                .authProvider(request.getAuthProvider())
+                .subscriptionType(SubscriptionType.FREE_TRIAL)
+                .subscriptionStartDate(LocalDateTime.now())
+                .subscriptionEndDate(LocalDateTime.now().plusDays(14))
+                .build();
+
+        Profile savedProfile = profileRepository.save(profile);
+        log.info("Profile created successfully for userId: {}, profileId: {}",
+                request.getUserId(), savedProfile.getId());
+
+        return toProfileResponse(savedProfile);
     }
 
     // ==================== Conversion Methods ====================

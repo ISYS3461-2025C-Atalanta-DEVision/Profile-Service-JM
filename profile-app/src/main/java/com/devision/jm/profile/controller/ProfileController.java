@@ -1,11 +1,13 @@
 package com.devision.jm.profile.controller;
 
+import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
 import com.devision.jm.profile.api.external.interfaces.ProfileApi;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -105,5 +107,20 @@ public class ProfileController {
         log.info("Search profiles request with term: {}", searchTerm);
         List<ProfileResponse> response = profileService.searchProfiles(searchTerm);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Create profile for existing user
+     * POST /api/profile
+     *
+     * Used to manually create profiles for users who registered
+     * before Kafka was enabled.
+     */
+    @PostMapping
+    public ResponseEntity<ProfileResponse> createProfile(
+            @Valid @RequestBody ProfileCreateRequest request) {
+        log.info("Create profile request for userId: {}", request.getUserId());
+        ProfileResponse response = profileService.createProfile(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
