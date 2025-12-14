@@ -65,6 +65,9 @@ app:
 # Kafka Feature Toggle
 kafka:
   enabled: ${KAFKA_ENABLED:false}
+  # Allow service to start even if Kafka broker is unavailable
+  listener:
+    auto-startup: ${KAFKA_LISTENER_AUTO_STARTUP:true}
 
 # Logging Configuration
 logging:

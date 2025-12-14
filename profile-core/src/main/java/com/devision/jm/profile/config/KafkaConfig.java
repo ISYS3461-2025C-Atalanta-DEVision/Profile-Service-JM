@@ -10,6 +10,9 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,9 @@ public class KafkaConfig {
     @Value("${spring.kafka.consumer.group-id:profile-service-group}")
     private String groupId;
 
+    @Value("${kafka.listener.auto-startup:true}")
+    private boolean autoStartup;
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -70,6 +76,11 @@ public class KafkaConfig {
         // Enable auto commit
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
 
+        // Connection retry settings - don't fail fast if broker unavailable
+        configProps.put(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG, 5000);
+        configProps.put(ConsumerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG, 30000);
+        configProps.put(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG, 5000);
+
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -78,6 +89,21 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+
+        // Don't fail on startup if Kafka is unavailable - retry connection
+        factory.getContainerProperties().setMissingTopicsFatal(false);
+        factory.getContainerProperties().setAuthExceptionRetryInterval(java.time.Duration.ofSeconds(10));
+
+        // Allow disabling auto-startup via KAFKA_LISTENER_AUTO_STARTUP=false
+        // This lets the service start even when Kafka broker is unavailable
+        factory.setAutoStartup(autoStartup);
+
+        // Error handler with retry backoff
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+                new FixedBackOff(5000L, 3L)); // 5 second interval, 3 retries
+        factory.setCommonErrorHandler(errorHandler);
+
+        log.info("Kafka listener auto-startup: {}", autoStartup);
         return factory;
     }
 }
