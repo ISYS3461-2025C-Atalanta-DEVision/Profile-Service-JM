@@ -37,6 +37,12 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Spring Cloud Commons for DiscoveryClient (Kafka discovery via Eureka) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-commons</artifactId>
+        </dependency>
+
         <!-- MapStruct for DTO mapping -->
         <dependency>
             <groupId>org.mapstruct</groupId>
