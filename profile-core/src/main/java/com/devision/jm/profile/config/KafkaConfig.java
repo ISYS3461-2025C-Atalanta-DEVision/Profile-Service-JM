@@ -10,11 +10,11 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -24,31 +24,25 @@ import java.util.Map;
  * Kafka Configuration
  *
  * Configures Kafka consumer for receiving events from Auth Service.
+ * Discovers Kafka address from Eureka via KafkaDiscoveryService.
  * Only loaded when kafka.enabled=true (KAFKA_ENABLED env var).
  *
  * Implements Microservice Architecture (A.3.2):
  * - Communication among microservices via Message Broker (Kafka)
  *
- * Environment Variables:
- * - KAFKA_ENABLED: Enable Kafka (default: false)
- * - KAFKA_BOOTSTRAP_SERVERS: Kafka broker addresses (default: localhost:9092)
+ * Discovery Flow:
+ * 1. KafkaDiscoveryService queries Eureka for kafka-registrar
+ * 2. Reads kafkaBroker from metadata
+ * 3. Falls back to application.yml if discovery fails
  */
 @Slf4j
 @Configuration
 @EnableKafka
+@RequiredArgsConstructor
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
 public class KafkaConfig {
 
-    @PostConstruct
-    public void init() {
-        log.info("========== KAFKA CONFIG LOADED ==========");
-        log.info("Kafka bootstrap servers: {}", bootstrapServers);
-        log.info("Kafka consumer group: {}", groupId);
-        log.info("==========================================");
-    }
-
-    @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
-    private String bootstrapServers;
+    private final KafkaDiscoveryService kafkaDiscoveryService;
 
     @Value("${spring.kafka.consumer.group-id:profile-service-group}")
     private String groupId;
@@ -56,11 +50,24 @@ public class KafkaConfig {
     @Value("${kafka.listener.auto-startup:true}")
     private boolean autoStartup;
 
+    @PostConstruct
+    public void init() {
+        String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
+        log.info("========== KAFKA CONFIG LOADED (EUREKA DISCOVERY) ==========");
+        log.info("Kafka bootstrap servers: {}", bootstrapServers);
+        log.info("Kafka consumer group: {}", groupId);
+        log.info("=============================================================");
+    }
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
 
-        // Kafka broker addresses
+        // Get Kafka address from Eureka discovery
+        String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
+        log.info("Configuring Kafka Consumer with bootstrap servers: {}", bootstrapServers);
+
+        // Kafka broker addresses (discovered from Eureka)
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
         // Consumer group ID
