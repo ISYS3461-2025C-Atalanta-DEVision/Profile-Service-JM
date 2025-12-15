@@ -1,4 +1,4 @@
-package com.devision.jm.profile.service.impl;
+package com.devision.jm.profile.service;
 
 import com.devision.jm.profile.api.external.dto.ApplicantSearchProfileDto;
 import com.devision.jm.profile.api.external.dto.MediaItemDto;
