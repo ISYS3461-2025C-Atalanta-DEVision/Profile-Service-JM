@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Profile Response DTO (External)
@@ -21,7 +20,6 @@ import java.util.List;
  * Implements requirements:
  * - 3.1.2: About Us, Who We Are Looking For
  * - 3.2.1: Company Logo
- * - 3.2.2: Media Gallery
  * - 6.1.1: Subscription info
  * - 6.2.1-6.2.4: Applicant Search Profile
  */
@@ -64,13 +62,6 @@ public class ProfileResponse {
     // ==================== Contact Info ====================
 
     private String phoneNumber;
-
-    // ==================== Media Gallery (3.2.2) ====================
-
-    /**
-     * 3.2.2: Company Media Gallery
-     */
-    private List<MediaItemDto> mediaGallery;
 
     // ==================== Subscription Info (6.1.1) ====================
 

@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 /**
  * Profile Update Request DTO (External)
  *
@@ -20,7 +18,6 @@ import java.util.List;
  * - 1.2.3: Phone number validation (optional)
  * - 3.1.2: About Us, Who We Are Looking For
  * - 3.2.1: Company Logo
- * - 3.2.2: Media Gallery
  * - 6.2.1-6.2.4: Applicant Search Profile
  */
 @Data
@@ -73,16 +70,6 @@ public class ProfileUpdateRequest {
             message = "Phone number must start with a valid dial code (e.g., +84) followed by up to 12 digits"
     )
     private String phoneNumber;
-
-    // ==================== Media Gallery (3.2.2) ====================
-
-    /**
-     * 3.2.2: Media Gallery - List of images/videos
-     * When provided, replaces the entire gallery
-     */
-    @Valid
-    @Size(max = 20, message = "Media gallery can contain maximum 20 items")
-    private List<MediaItemDto> mediaGallery;
 
     // ==================== Applicant Search Profile (6.2.1-6.2.4) ====================
 

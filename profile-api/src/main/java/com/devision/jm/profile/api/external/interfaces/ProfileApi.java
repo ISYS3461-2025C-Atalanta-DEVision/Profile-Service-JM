@@ -1,6 +1,7 @@
 package com.devision.jm.profile.api.external.interfaces;
 
 import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
+import com.devision.jm.profile.api.external.dto.ProfileFullUpdateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
 
@@ -59,4 +60,13 @@ public interface ProfileApi {
      * @return Created profile response
      */
     ProfileResponse createProfile(ProfileCreateRequest request);
+
+    /**
+     * Full update profile - replaces all editable fields
+     *
+     * @param userId User ID from Auth Service
+     * @param request Full update request with all fields
+     * @return Updated profile response
+     */
+    ProfileResponse fullUpdateProfile(String userId, ProfileFullUpdateRequest request);
 }

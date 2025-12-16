@@ -1,7 +1,6 @@
 package com.devision.jm.profile.model.entity;
 
 import com.devision.jm.profile.model.embedded.ApplicantSearchProfile;
-import com.devision.jm.profile.model.embedded.MediaItem;
 import com.devision.jm.profile.model.enums.SubscriptionType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -10,8 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Profile Document (MongoDB) - User Profile Data
@@ -31,7 +28,6 @@ import java.util.List;
  * - 1.3.3: Sharding by country
  * - 3.1.2: About Us, Who We Are Looking For
  * - 3.2.1: Company Logo
- * - 3.2.2: Media Gallery (images/videos)
  * - 6.1.1: Subscription management
  * - 6.2.1-6.2.4: Applicant Searching Profile
  */
@@ -64,11 +60,14 @@ public class Profile extends BaseEntity {
 
     // ==================== Company Information ====================
 
+    private static final String DEFAULT_AVATAR_URL = "default";
+
     @Field("company_name")
     private String companyName;
 
     @Field("avatar_url")
-    private String avatarUrl;
+    @Builder.Default
+    private String avatarUrl = DEFAULT_AVATAR_URL;
 
     /**
      * 3.2.1: Company Logo URL
@@ -90,16 +89,6 @@ public class Profile extends BaseEntity {
      */
     @Field("who_we_are_looking_for")
     private String whoWeAreLookingFor;
-
-    // ==================== Media Gallery (3.2.2) ====================
-
-    /**
-     * 3.2.2: Company Media Gallery
-     * List of images and videos showcasing the company
-     */
-    @Field("media_gallery")
-    @Builder.Default
-    private List<MediaItem> mediaGallery = new ArrayList<>();
 
     // ==================== Location Information (1.3.3 Sharding) ====================
 
@@ -193,25 +182,5 @@ public class Profile extends BaseEntity {
      */
     public boolean isPremiumSubscriber() {
         return subscriptionType == SubscriptionType.PREMIUM && isSubscriptionActive();
-    }
-
-    /**
-     * Add a media item to the gallery
-     */
-    public void addMediaItem(MediaItem mediaItem) {
-        if (mediaGallery == null) {
-            mediaGallery = new ArrayList<>();
-        }
-        mediaGallery.add(mediaItem);
-    }
-
-    /**
-     * Remove a media item from the gallery by URL
-     */
-    public boolean removeMediaItem(String url) {
-        if (mediaGallery == null) {
-            return false;
-        }
-        return mediaGallery.removeIf(item -> item.getUrl().equals(url));
     }
 }

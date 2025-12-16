@@ -35,6 +35,11 @@ public interface ProfileRepository extends MongoRepository<Profile, String> {
     boolean existsByUserId(String userId);
 
     /**
+     * Check if email is already in use by another profile
+     */
+    boolean existsByEmailIgnoreCase(String email);
+
+    /**
      * Find profiles by country (for sharding/analytics)
      */
     List<Profile> findByCountry(String country);

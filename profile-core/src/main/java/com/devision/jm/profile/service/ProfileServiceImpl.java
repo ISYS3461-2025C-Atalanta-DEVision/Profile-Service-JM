@@ -1,17 +1,15 @@
 package com.devision.jm.profile.service;
 
 import com.devision.jm.profile.api.external.dto.ApplicantSearchProfileDto;
-import com.devision.jm.profile.api.external.dto.MediaItemDto;
 import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
+import com.devision.jm.profile.api.external.dto.ProfileFullUpdateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
 import com.devision.jm.profile.api.external.interfaces.ProfileApi;
 import com.devision.jm.profile.model.embedded.ApplicantSearchProfile;
-import com.devision.jm.profile.model.embedded.MediaItem;
 import com.devision.jm.profile.model.entity.Profile;
 import com.devision.jm.profile.model.enums.EducationDegree;
 import com.devision.jm.profile.model.enums.EmploymentStatus;
-import com.devision.jm.profile.model.enums.MediaType;
 import com.devision.jm.profile.model.enums.SubscriptionType;
 import com.devision.jm.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +33,6 @@ import java.util.stream.Collectors;
  * Implements requirements:
  * - 3.1.2: About Us, Who We Are Looking For
  * - 3.2.1: Company Logo
- * - 3.2.2: Media Gallery
  * - 6.2.1-6.2.4: Applicant Search Profile (Premium Feature)
  */
 @Slf4j
@@ -108,14 +103,6 @@ public class ProfileServiceImpl implements ProfileApi {
             profile.setPhoneNumber(request.getPhoneNumber());
         }
 
-        // ==================== Media Gallery (3.2.2) ====================
-        if (request.getMediaGallery() != null) {
-            List<MediaItem> mediaItems = request.getMediaGallery().stream()
-                    .map(this::toMediaItem)
-                    .collect(Collectors.toList());
-            profile.setMediaGallery(mediaItems);
-        }
-
         // ==================== Applicant Search Profile (6.2.1-6.2.4) ====================
         if (request.getApplicantSearchProfile() != null) {
             // Check if this is a premium feature
@@ -156,7 +143,7 @@ public class ProfileServiceImpl implements ProfileApi {
             throw new RuntimeException("Profile already exists for userId: " + request.getUserId());
         }
 
-        // Create new profile with 14-day free trial
+        // Create new profile with FREE subscription
         Profile profile = Profile.builder()
                 .userId(request.getUserId())
                 .email(request.getEmail())
@@ -165,9 +152,9 @@ public class ProfileServiceImpl implements ProfileApi {
                 .city(request.getCity())
                 .streetAddress(request.getStreetAddress())
                 .phoneNumber(request.getPhoneNumber())
-                .avatarUrl(request.getAvatarUrl())
                 .authProvider(request.getAuthProvider())
                 .subscriptionType(SubscriptionType.FREE)
+                // avatarUrl will use default value from Profile entity
                 .build();
 
         Profile savedProfile = profileRepository.save(profile);
@@ -175,6 +162,43 @@ public class ProfileServiceImpl implements ProfileApi {
                 request.getUserId(), savedProfile.getId());
 
         return toProfileResponse(savedProfile);
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse fullUpdateProfile(String userId, ProfileFullUpdateRequest request) {
+        log.info("Full update profile for userId: {}", userId);
+
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found for userId: " + userId));
+
+        // ==================== Email Update ====================
+        String newEmail = request.getEmail();
+        if (newEmail != null && !newEmail.equalsIgnoreCase(profile.getEmail())) {
+            // Check if new email is already in use by another profile
+            if (profileRepository.existsByEmailIgnoreCase(newEmail)) {
+                log.warn("Email {} is already in use", newEmail);
+                throw new RuntimeException("Email is already in use: " + newEmail);
+            }
+            log.info("Updating email for userId: {} from {} to {}", userId, profile.getEmail(), newEmail);
+            profile.setEmail(newEmail);
+        }
+
+        // ==================== Contact Info ====================
+        profile.setCompanyName(request.getCompanyName());
+        profile.setPhoneNumber(request.getPhoneNumber());
+        profile.setCountry(request.getCountry());
+        profile.setCity(request.getCity());
+        profile.setStreetAddress(request.getStreetAddress());
+
+        // ==================== Public Profile (3.1.2) ====================
+        profile.setAboutUs(request.getAboutUs());
+        profile.setWhoWeAreLookingFor(request.getWhoWeAreLookingFor());
+
+        Profile updatedProfile = profileRepository.save(profile);
+        log.info("Profile fully updated for userId: {}", userId);
+
+        return toProfileResponse(updatedProfile);
     }
 
     // ==================== Conversion Methods ====================
@@ -199,8 +223,6 @@ public class ProfileServiceImpl implements ProfileApi {
                 .streetAddress(profile.getStreetAddress())
                 // Contact Info
                 .phoneNumber(profile.getPhoneNumber())
-                // Media Gallery
-                .mediaGallery(toMediaItemDtos(profile.getMediaGallery()))
                 // Subscription Info
                 .subscriptionType(profile.getSubscriptionType() != null ?
                         profile.getSubscriptionType().name() : null)
@@ -214,54 +236,6 @@ public class ProfileServiceImpl implements ProfileApi {
                 .authProvider(profile.getAuthProvider())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
-                .build();
-    }
-
-    /**
-     * Convert MediaItem entity to MediaItemDto
-     */
-    private MediaItemDto toMediaItemDto(MediaItem item) {
-        if (item == null) {
-            return null;
-        }
-        return MediaItemDto.builder()
-                .mediaType(item.getMediaType() != null ? item.getMediaType().name() : null)
-                .url(item.getUrl())
-                .thumbnailUrl(item.getThumbnailUrl())
-                .title(item.getTitle())
-                .description(item.getDescription())
-                .displayOrder(item.getDisplayOrder())
-                .uploadedAt(item.getUploadedAt())
-                .build();
-    }
-
-    /**
-     * Convert list of MediaItem entities to DTOs
-     */
-    private List<MediaItemDto> toMediaItemDtos(List<MediaItem> items) {
-        if (items == null || items.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return items.stream()
-                .map(this::toMediaItemDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Convert MediaItemDto to MediaItem entity
-     */
-    private MediaItem toMediaItem(MediaItemDto dto) {
-        if (dto == null) {
-            return null;
-        }
-        return MediaItem.builder()
-                .mediaType(dto.getMediaType() != null ? MediaType.valueOf(dto.getMediaType()) : null)
-                .url(dto.getUrl())
-                .thumbnailUrl(dto.getThumbnailUrl())
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .displayOrder(dto.getDisplayOrder())
-                .uploadedAt(dto.getUploadedAt() != null ? dto.getUploadedAt() : LocalDateTime.now())
                 .build();
     }
 

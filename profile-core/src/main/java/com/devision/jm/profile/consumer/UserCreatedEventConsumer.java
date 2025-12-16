@@ -76,10 +76,10 @@ public class UserCreatedEventConsumer {
                     .city(event.getCity())
                     .streetAddress(event.getStreetAddress())
                     .phoneNumber(event.getPhoneNumber())
-                    .avatarUrl(event.getAvatarUrl())
                     .authProvider(event.getAuthProvider())
                     // New users start with FREE subscription (6.1.1)
                     .subscriptionType(SubscriptionType.FREE)
+                    // avatarUrl will use default value from Profile entity
                     .build();
 
             // Save to database
