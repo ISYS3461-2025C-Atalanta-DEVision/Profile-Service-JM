@@ -1,13 +1,11 @@
 package com.devision.jm.profile.controller;
 
-import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileFullUpdateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.interfaces.ProfileApi;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +22,12 @@ import java.util.List;
  * - Auth Service handles: authentication
  *
  * Note: userId is passed via header from API Gateway after token validation
+ * Note: Profile creation is handled via Kafka events from Auth Service
  *
  * Endpoints:
- * - GET  /api/profiles/me           - Get current user's profile
- * - GET  /api/profiles?email=       - Get profile by email (internal use)
- * - GET  /api/profiles?search=      - Search profiles (internal use)
- * - POST /api/profiles              - Create profile (internal use)
- * - PUT  /api/profiles/me           - Update current user's profile
+ * - GET  /api/profiles/me          - Get current user's profile
+ * - GET  /api/profiles?search=     - Search profiles by email or company name
+ * - PUT  /api/profiles/me          - Update current user's profile
  */
 @Slf4j
 @RestController
@@ -53,37 +50,15 @@ public class ProfileController {
     }
 
     /**
-     * Get profile by email or search profiles
-     * GET /api/profiles?email={email}
+     * Search profiles by email or company name
      * GET /api/profiles?search={searchTerm}
      */
     @GetMapping
-    public ResponseEntity<?> getProfiles(
-            @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "search", required = false) String searchTerm) {
-        if (email != null) {
-            log.info("Get profile request for email: {}", email);
-            ProfileResponse response = profileService.getProfileByEmail(email);
-            return ResponseEntity.ok(response);
-        }
-        if (searchTerm != null) {
-            log.info("Search profiles request with term: {}", searchTerm);
-            List<ProfileResponse> response = profileService.searchProfiles(searchTerm);
-            return ResponseEntity.ok(response);
-        }
-        return ResponseEntity.badRequest().body("Either 'email' or 'search' query parameter is required");
-    }
-
-    /**
-     * Create profile for existing user
-     * POST /api/profiles
-     */
-    @PostMapping
-    public ResponseEntity<ProfileResponse> createProfile(
-            @Valid @RequestBody ProfileCreateRequest request) {
-        log.info("Create profile request for userId: {}", request.getUserId());
-        ProfileResponse response = profileService.createProfile(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<List<ProfileResponse>> searchProfiles(
+            @RequestParam("search") String searchTerm) {
+        log.info("Search profiles request with term: {}", searchTerm);
+        List<ProfileResponse> response = profileService.searchProfiles(searchTerm);
+        return ResponseEntity.ok(response);
     }
 
     /**
