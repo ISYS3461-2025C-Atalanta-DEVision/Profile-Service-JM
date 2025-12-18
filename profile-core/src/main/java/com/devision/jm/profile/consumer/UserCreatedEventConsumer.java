@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
+@Transactional(rollbackFor = Exception.class)
 public class UserCreatedEventConsumer {
 
     private final ProfileRepository profileRepository;
@@ -50,7 +51,6 @@ public class UserCreatedEventConsumer {
             groupId = "${spring.kafka.consumer.group-id:profile-service-group}",
             autoStartup = "${kafka.consumer.auto-startup:true}"
     )
-    @Transactional
     public void consumeUserCreatedEvent(String message) {
         log.info("Received user-created event: {}", message);
 

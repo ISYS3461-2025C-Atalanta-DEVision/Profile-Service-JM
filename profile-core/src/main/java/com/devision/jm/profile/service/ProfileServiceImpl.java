@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class ProfileServiceImpl implements ProfileApi {
 
     private final ProfileRepository profileRepository;
@@ -63,7 +64,6 @@ public class ProfileServiceImpl implements ProfileApi {
     }
 
     @Override
-    @Transactional
     public ProfileResponse updateProfile(String userId, ProfileUpdateRequest request) {
         log.info("Updating profile for userId: {}", userId);
 
@@ -133,7 +133,6 @@ public class ProfileServiceImpl implements ProfileApi {
     }
 
     @Override
-    @Transactional
     public ProfileResponse createProfile(ProfileCreateRequest request) {
         log.info("Creating profile for userId: {}, email: {}", request.getUserId(), request.getEmail());
 
@@ -165,7 +164,6 @@ public class ProfileServiceImpl implements ProfileApi {
     }
 
     @Override
-    @Transactional
     public ProfileResponse fullUpdateProfile(String userId, ProfileFullUpdateRequest request) {
         log.info("Full update profile for userId: {}", userId);
 

@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
+@Transactional(rollbackFor = Exception.class)
 public class PaymentCompletedEventConsumer {
 
     private final ProfileRepository profileRepository;
@@ -50,7 +51,6 @@ public class PaymentCompletedEventConsumer {
             groupId = "${spring.kafka.consumer.group-id:profile-service-group}",
             autoStartup = "${kafka.consumer.auto-startup:true}"
     )
-    @Transactional
     public void consumePaymentCompletedEvent(String message) {
         log.info("========== RECEIVED PAYMENT COMPLETED EVENT ==========");
         log.info("Message: {}", message);
