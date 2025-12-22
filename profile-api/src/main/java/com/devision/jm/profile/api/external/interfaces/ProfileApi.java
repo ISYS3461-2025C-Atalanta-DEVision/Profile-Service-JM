@@ -28,6 +28,15 @@ public interface ProfileApi {
     ProfileResponse getProfileByUserId(String userId);
 
     /**
+     * Get profile by profile ID
+     * Used for external API access (e.g., Job Applicant team)
+     *
+     * @param profileId Profile ID (MongoDB _id)
+     * @return Profile response
+     */
+    ProfileResponse getProfileById(String profileId);
+
+    /**
      * Get profile by email
      *
      * @param email User's email

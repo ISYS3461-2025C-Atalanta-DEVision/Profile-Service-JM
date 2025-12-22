@@ -50,6 +50,19 @@ public class ProfileController {
     }
 
     /**
+     * Get profile by ID
+     * GET /api/profiles/{id}
+     * Used by external API (Job Applicant team)
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfileResponse> getProfileById(
+            @PathVariable("id") String profileId) {
+        log.info("Get profile by id: {}", profileId);
+        ProfileResponse response = profileService.getProfileById(profileId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Search profiles by email or company name
      * GET /api/profiles?search={searchTerm}
      */

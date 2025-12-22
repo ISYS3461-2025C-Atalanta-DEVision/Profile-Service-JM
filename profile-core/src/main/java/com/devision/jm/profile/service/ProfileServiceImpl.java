@@ -54,6 +54,16 @@ public class ProfileServiceImpl implements ProfileApi {
     }
 
     @Override
+    public ProfileResponse getProfileById(String profileId) {
+        log.info("Getting profile by id: {}", profileId);
+
+        Profile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new RuntimeException("Profile not found for id: " + profileId));
+
+        return toProfileResponse(profile);
+    }
+
+    @Override
     public ProfileResponse getProfileByEmail(String email) {
         log.info("Getting profile for email: {}", email);
 
