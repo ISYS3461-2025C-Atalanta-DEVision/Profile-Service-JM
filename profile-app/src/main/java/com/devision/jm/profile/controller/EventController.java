@@ -37,7 +37,7 @@ public class EventController {
     /**
      * Create a new event POST /api/events
      */
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<EventResponse> createEvent(
             @RequestHeader("X-User-Id") String companyId,
             @Valid @RequestBody EventCreateRequest request) {

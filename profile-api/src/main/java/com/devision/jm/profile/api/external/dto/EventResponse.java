@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Event Response DTO (External)
@@ -56,12 +57,17 @@ public class EventResponse {
     // ==================== Media ====================
 
     /**
-     * Image URL (nullable)
+     * Cover image URL (used for preview / listing)
      */
-    private String imageUrl;
+    private String coverImage;
 
     /**
-     * Video URL (nullable)
+     * Image gallery URLs (optional)
+     */
+    private List<String> imageUrls;
+
+    /**
+     * Video URL (optional)
      */
     private String videoUrl;
 

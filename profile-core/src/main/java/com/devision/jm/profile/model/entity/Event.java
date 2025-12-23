@@ -5,6 +5,8 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.util.List;
+
 
 /**
  * Event Document (MongoDB)
@@ -27,7 +29,7 @@ public class Event extends BaseEntity {
 
     // ==================== Company Reference ====================
     /**
-     * Event ID 
+     * Event ID
      */
     @Indexed(unique = true)
     @Field("event_id")
@@ -54,15 +56,21 @@ public class Event extends BaseEntity {
     @Field("caption")
     private String caption;
 
-    // ==================== Media (Optional) ====================
+    // ==================== Media ====================
     /**
-     * Image URL (nullable) Example: banner, poster, thumbnail
+     * Cover image URL (used for listing / preview)
      */
-    @Field("image_url")
-    private String imageUrl;
+    @Field("cover_image")
+    private String coverImage;
 
     /**
-     * Video URL (nullable) Example: promo video, recorded session
+     * Image gallery URLs (optional)
+     */
+    @Field("image_urls")
+    private List<String> imageUrls;
+
+    /**
+     * Video URL (optional)
      */
     @Field("video_url")
     private String videoUrl;
