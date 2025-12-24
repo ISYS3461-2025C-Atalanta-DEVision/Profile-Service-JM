@@ -26,6 +26,7 @@ import java.util.List;
  *
  * Endpoints:
  * - GET  /api/profiles/me          - Get current user's profile
+ * - GET  /api/profiles/{userId}    - Get profile by user ID (for job posts)
  * - GET  /api/profiles?search=     - Search profiles by email or company name
  * - PUT  /api/profiles/me          - Update current user's profile
  */
@@ -50,15 +51,15 @@ public class ProfileController {
     }
 
     /**
-     * Get profile by ID
-     * GET /api/profiles/{id}
-     * Used by external API (Job Applicant team)
+     * Get profile by user ID
+     * GET /api/profiles/{userId}
+     * Used by frontend to fetch company info for job posts
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<ProfileResponse> getProfileById(
-            @PathVariable("id") String profileId) {
-        log.info("Get profile by id: {}", profileId);
-        ProfileResponse response = profileService.getProfileById(profileId);
+    @GetMapping("/{userId}")
+    public ResponseEntity<ProfileResponse> getProfileByUserId(
+            @PathVariable("userId") String userId) {
+        log.info("Get profile by userId: {}", userId);
+        ProfileResponse response = profileService.getProfileByUserId(userId);
         return ResponseEntity.ok(response);
     }
 
