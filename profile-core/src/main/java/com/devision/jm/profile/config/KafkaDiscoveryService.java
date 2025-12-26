@@ -13,11 +13,13 @@ import java.util.Map;
 /**
  * Kafka Discovery Service
  *
- * Discovers Kafka broker address from Eureka via kafka-registrar service metadata.
+ * Discovers Kafka broker address from Eureka via kafka-registrar service
+ * metadata.
  * This enables dynamic Kafka discovery instead of hardcoding the address.
  *
  * How it works:
- * 1. kafka-registrar registers with Eureka with metadata: kafkaBroker=kafka:9092
+ * 1. kafka-registrar registers with Eureka with metadata:
+ * kafkaBroker=kafka:9092
  * 2. This service queries Eureka for kafka-registrar
  * 3. Reads the kafkaBroker from metadata
  * 4. Falls back to config value if discovery fails
