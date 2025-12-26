@@ -42,6 +42,13 @@ public class EventResponse {
      */
     private String companyId;
 
+    // ==================== Status ====================
+
+    /**
+     * Event status (PENDING, ACTIVE, FAILED)
+     */
+    private String status;
+
     // ==================== Event Content ====================
 
     /**

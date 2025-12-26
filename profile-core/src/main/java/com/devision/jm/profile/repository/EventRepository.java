@@ -1,6 +1,7 @@
 package com.devision.jm.profile.repository;
 
 import com.devision.jm.profile.model.entity.Event;
+import com.devision.jm.profile.model.enums.EventStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +24,15 @@ public interface EventRepository extends MongoRepository<Event, String> {
      * @return List of events for the company
      */
     List<Event> findByCompanyId(String companyId);
+
+    /**
+     * Find events by company ID and status
+     *
+     * @param companyId Company ID (Profile.userId)
+     * @param status Event status
+     * @return List of events matching criteria
+     */
+    List<Event> findByCompanyIdAndStatus(String companyId, EventStatus status);
 
     /**
      * Find event by event ID

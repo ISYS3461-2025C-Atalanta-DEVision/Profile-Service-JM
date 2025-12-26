@@ -1,5 +1,6 @@
 package com.devision.jm.profile.model.entity;
 
+import com.devision.jm.profile.model.enums.EventStatus;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -43,6 +44,14 @@ public class Event extends BaseEntity {
     @Field("company_id")
     private String companyId;
 
+    // ==================== Event Status ====================
+    /**
+     * Event status (PENDING, ACTIVE, FAILED)
+     */
+    @Field("status")
+    @Builder.Default
+    private EventStatus status = EventStatus.PENDING;
+
     // ==================== Event Content ====================
     /**
      * Event title
@@ -64,14 +73,32 @@ public class Event extends BaseEntity {
     private String coverImage;
 
     /**
+     * S3 key for cover image (for deletion)
+     */
+    @Field("cover_image_key")
+    private String coverImageKey;
+
+    /**
      * Image gallery URLs (optional)
      */
     @Field("image_urls")
     private List<String> imageUrls;
 
     /**
+     * S3 keys for image gallery (for deletion)
+     */
+    @Field("image_keys")
+    private List<String> imageKeys;
+
+    /**
      * Video URL (optional)
      */
     @Field("video_url")
     private String videoUrl;
+
+    /**
+     * S3 key for video (for deletion)
+     */
+    @Field("video_key")
+    private String videoKey;
 }
