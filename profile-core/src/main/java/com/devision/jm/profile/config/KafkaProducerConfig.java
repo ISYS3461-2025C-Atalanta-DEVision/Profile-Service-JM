@@ -2,12 +2,16 @@ package com.devision.jm.profile.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
+import com.devision.jm.profile.model.entity.Profile;
+
+import com.devision.jm.profile.api.external.dto.ProfileUpdateEventResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,5 +55,24 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
+    }
+
+    @Autowired
+    private KafkaTemplate<String, ProfileUpdateEventResponse> kafkaTemplate;
+
+    public void handleCompanyUpdated(Profile company) {
+        ProfileUpdateEventResponse event = ProfileUpdateEventResponse.builder()
+                .userId(company.getId()) // companyId in other services
+                .companyName(company.getCompanyName())
+                .avatarUrl(company.getAvatarUrl())
+                .logoUrl(company.getLogoUrl())
+                .country(company.getCountry())
+                .city(company.getCity())
+                .streetAddress(company.getStreetAddress())
+                .phoneNumber(company.getPhoneNumber())
+                .build();
+
+        // Publish to topic consumed by Job Post and other services
+        kafkaTemplate.send("company-profile.updates", company.getId(), event);
     }
 }
