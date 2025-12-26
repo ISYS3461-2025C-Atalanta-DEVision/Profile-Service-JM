@@ -93,13 +93,28 @@ public class EventController {
     }
 
     /**
+     * Get a single event by event ID
+     * GET /api/events/event/{eventId}
+     *
+     * Returns the event regardless of status (for owner viewing)
+     */
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<EventResponse> getEventByEventId(
+            @PathVariable String eventId) {
+
+        log.info("Get event by eventId: {}", eventId);
+        EventResponse response = eventService.getEventByEventId(eventId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Get events by company ID
-     * GET /api/events/{companyId}
+     * GET /api/events/company/{companyId}
      *
      * Used by external services (e.g. Job Applicant team)
      * Only returns ACTIVE events
      */
-    @GetMapping("/{companyId}")
+    @GetMapping("/company/{companyId}")
     public ResponseEntity<List<EventResponse>> getEventsByCompanyId(
             @PathVariable String companyId) {
 
