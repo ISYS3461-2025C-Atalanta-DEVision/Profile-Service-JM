@@ -25,26 +25,25 @@ import java.util.Map;
  * Configures Kafka producer for sending events to File Service.
  * Uses Eureka discovery to find Kafka broker address.
  */
-@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true")
+@Slf4j
 public class KafkaProducerConfig {
 
     private final KafkaDiscoveryService kafkaDiscoveryService;
 
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
+    public ProducerFactory<String, ProfileUpdateEventResponse> profileUpdateProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-
         String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
         log.info("Configuring Kafka Producer with bootstrap servers: {}", bootstrapServers);
 
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                org.springframework.kafka.support.serializer.JsonSerializer.class);
 
-        // Reliability settings
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
         configProps.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
@@ -53,26 +52,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    @Autowired
-    private KafkaTemplate<String, ProfileUpdateEventResponse> kafkaTemplate;
-
-    public void handleCompanyUpdated(Profile company) {
-        ProfileUpdateEventResponse event = ProfileUpdateEventResponse.builder()
-                .userId(company.getId()) // companyId in other services
-                .companyName(company.getCompanyName())
-                .avatarUrl(company.getAvatarUrl())
-                .logoUrl(company.getLogoUrl())
-                .country(company.getCountry())
-                .city(company.getCity())
-                .streetAddress(company.getStreetAddress())
-                .phoneNumber(company.getPhoneNumber())
-                .build();
-
-        // Publish to topic consumed by Job Post and other services
-        kafkaTemplate.send("company-profile.updates", company.getId(), event);
+    public KafkaTemplate<String, ProfileUpdateEventResponse> profileUpdateKafkaTemplate() {
+        return new KafkaTemplate<>(profileUpdateProducerFactory());
     }
 }
