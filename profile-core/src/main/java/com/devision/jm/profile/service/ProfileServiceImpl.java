@@ -6,17 +6,24 @@ import com.devision.jm.profile.api.external.dto.ProfileFullUpdateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
 import com.devision.jm.profile.api.external.interfaces.ProfileApi;
+import com.devision.jm.profile.api.internal.dto.AvatarFileUploadRequest;
 import com.devision.jm.profile.model.embedded.ApplicantSearchProfile;
 import com.devision.jm.profile.model.entity.Profile;
 import com.devision.jm.profile.model.enums.EducationDegree;
 import com.devision.jm.profile.model.enums.EmploymentStatus;
 import com.devision.jm.profile.model.enums.SubscriptionType;
 import com.devision.jm.profile.repository.ProfileRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +49,14 @@ import java.util.stream.Collectors;
 public class ProfileServiceImpl implements ProfileApi {
 
     private final ProfileRepository profileRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${kafka.topics.avatar-file-upload:avatar-file-upload}")
+    private String avatarFileUploadTopic;
+
+    @Value("${kafka.enabled:false}")
+    private boolean kafkaEnabled;
 
     @Override
     public ProfileResponse getProfileByUserId(String userId) {
@@ -289,5 +304,52 @@ public class ProfileServiceImpl implements ProfileApi {
                 .desiredEducationDegree(dto.getDesiredEducationDegree() != null ?
                         EducationDegree.valueOf(dto.getDesiredEducationDegree()) : null)
                 .build();
+    }
+
+    // ==================== AVATAR UPLOAD ====================
+
+    @Override
+    public ProfileResponse uploadAvatar(String userId, MultipartFile avatar) {
+        log.info("Uploading avatar for userId: {}", userId);
+
+        // Validate avatar is provided
+        if (avatar == null || avatar.isEmpty()) {
+            throw new RuntimeException("Avatar image is required");
+        }
+
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found for userId: " + userId));
+
+        if (kafkaEnabled) {
+            // Send to File Service via Kafka
+            sendAvatarUploadRequest(userId, avatar);
+            log.info("Avatar upload request sent to Kafka for userId: {}", userId);
+        } else {
+            log.warn("Kafka is disabled. Avatar will not be uploaded. userId={}", userId);
+        }
+
+        return toProfileResponse(profile);
+    }
+
+    /**
+     * Send avatar upload request to File Service via Kafka
+     */
+    private void sendAvatarUploadRequest(String userId, MultipartFile avatar) {
+        try {
+            AvatarFileUploadRequest request = AvatarFileUploadRequest.builder()
+                    .userId(userId)
+                    .avatarBase64(Base64.getEncoder().encodeToString(avatar.getBytes()))
+                    .avatarFilename(avatar.getOriginalFilename())
+                    .avatarContentType(avatar.getContentType())
+                    .build();
+
+            String json = objectMapper.writeValueAsString(request);
+            kafkaTemplate.send(avatarFileUploadTopic, userId, json);
+            log.info("Sent avatar upload request to Kafka. userId={}, topic={}", userId, avatarFileUploadTopic);
+
+        } catch (IOException e) {
+            log.error("Failed to send avatar upload request to Kafka. userId={}", userId, e);
+            throw new RuntimeException("Failed to process avatar upload request", e);
+        }
     }
 }

@@ -68,10 +68,12 @@ kafka:
   # Allow service to start even if Kafka broker is unavailable
   listener:
     auto-startup: ${KAFKA_LISTENER_AUTO_STARTUP:true}
-  # Kafka topics for event file uploads
+  # Kafka topics for file uploads
   topics:
     event-file-upload: event-file-upload
     event-file-completed: event-file-completed
+    avatar-file-upload: avatar-file-upload
+    avatar-file-completed: avatar-file-completed
 
 # Internal API Key Configuration (must match API Gateway)
 internal:

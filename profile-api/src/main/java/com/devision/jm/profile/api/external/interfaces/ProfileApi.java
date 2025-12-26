@@ -4,6 +4,7 @@ import com.devision.jm.profile.api.external.dto.ProfileCreateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileFullUpdateRequest;
 import com.devision.jm.profile.api.external.dto.ProfileResponse;
 import com.devision.jm.profile.api.external.dto.ProfileUpdateRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -78,4 +79,14 @@ public interface ProfileApi {
      * @return Updated profile response
      */
     ProfileResponse fullUpdateProfile(String userId, ProfileFullUpdateRequest request);
+
+    /**
+     * Upload avatar for user profile
+     * Sends file to File Service via Kafka for async processing.
+     *
+     * @param userId User ID from Auth Service
+     * @param avatar Avatar image file
+     * @return Profile response (avatar will be updated async)
+     */
+    ProfileResponse uploadAvatar(String userId, MultipartFile avatar);
 }

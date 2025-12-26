@@ -6,8 +6,10 @@ import com.devision.jm.profile.api.external.interfaces.ProfileApi;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -85,6 +87,22 @@ public class ProfileController {
             @Valid @RequestBody ProfileFullUpdateRequest request) {
         log.info("Update profile request for userId: {}", userId);
         ProfileResponse response = profileService.fullUpdateProfile(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Upload avatar for current user's profile
+     * POST /api/profiles/me/avatar (multipart/form-data)
+     *
+     * Avatar is sent to File Service via Kafka for async processing.
+     * The avatar URL will be updated in the profile when processing completes.
+     */
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProfileResponse> uploadAvatar(
+            @RequestHeader("X-User-Id") String userId,
+            @RequestParam("avatar") MultipartFile avatar) {
+        log.info("Upload avatar request for userId: {}", userId);
+        ProfileResponse response = profileService.uploadAvatar(userId, avatar);
         return ResponseEntity.ok(response);
     }
 }
