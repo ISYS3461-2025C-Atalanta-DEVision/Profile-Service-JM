@@ -27,5 +27,6 @@ import lombok.NoArgsConstructor;
 public class CompanyNameRequestEvent {
     private String requestId;
     private String companyId;
+    private String companyName;
 }
 

@@ -25,7 +25,6 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, CompanyNameRequestEvent> companyNameRequestConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
-
         String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
         log.info("Configuring CompanyNameRequest Kafka Consumer with bootstrap servers: {}", bootstrapServers);
 
@@ -33,23 +32,24 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 org.springframework.kafka.support.serializer.JsonDeserializer.class);
+
+        // IMPORTANT: correct FQN
         props.put(org.springframework.kafka.support.serializer.JsonDeserializer.VALUE_DEFAULT_TYPE,
                 "com.devision.jm.profile.api.external.dto.CompanyNameEvent.CompanyNameRequestEvent");
+
+        // For now, allow this package (or "*", while debugging)
         props.put(org.springframework.kafka.support.serializer.JsonDeserializer.TRUSTED_PACKAGES,
-              "com.devision.jm.profile.api.external.dto.CompanyNameEvent");
+                "com.devision.jm.profile.api.external.dto.CompanyNameEvent");
 
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "profile-service-group");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean(name = "companyNameRequestListenerContainerFactory")
-    public ConcurrentKafkaListenerContainerFactory<String, CompanyNameRequestEvent>
-    companyNameRequestListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, CompanyNameRequestEvent> companyNameRequestListenerContainerFactory() {
 
-        ConcurrentKafkaListenerContainerFactory<String, CompanyNameRequestEvent> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, CompanyNameRequestEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(companyNameRequestConsumerFactory());
         return factory;
     }
