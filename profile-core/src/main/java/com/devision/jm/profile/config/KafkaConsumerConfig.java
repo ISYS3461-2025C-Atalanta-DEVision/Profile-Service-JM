@@ -33,13 +33,14 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 org.springframework.kafka.support.serializer.JsonDeserializer.class);
 
-        // IMPORTANT: correct FQN
-        props.put(org.springframework.kafka.support.serializer.JsonDeserializer.VALUE_DEFAULT_TYPE,
-                "com.devision.jm.profile.api.external.dto.CompanyNameEvent.CompanyNameRequestEvent");
+        // Option A (recommended for now): Trust all
+        props.put(org.springframework.kafka.support.serializer.JsonDeserializer.TRUSTED_PACKAGES, "*");
 
-        // For now, allow this package (or "*", while debugging)
-        props.put(org.springframework.kafka.support.serializer.JsonDeserializer.TRUSTED_PACKAGES,
-                "com.devision.jm.profile.api.external.dto.CompanyNameEvent");
+        // Optionally keep VALUE_DEFAULT_TYPE, but it is not required if we trust all
+        // and the producer sends __TypeId__ header.
+        // You can either remove it, or set it to your local class:
+        // props.put(org.springframework.kafka.support.serializer.JsonDeserializer.VALUE_DEFAULT_TYPE,
+        // "com.devision.jm.profile.api.external.dto.CompanyNameEvent.CompanyNameRequestEvent");
 
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "profile-service-group");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
