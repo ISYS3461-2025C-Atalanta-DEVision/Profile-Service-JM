@@ -47,7 +47,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://${EUREKA_USERNAME:eureka}:${EUREKA_PASSWORD:strongpassword}@eureka:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
     register-with-eureka: ${EUREKA_ENABLED:true}
     fetch-registry: ${EUREKA_ENABLED:true}
   instance:
@@ -77,7 +77,7 @@ kafka:
 
 # Internal API Key Configuration (must match API Gateway)
 internal:
-  api-key: ${INTERNAL_API_KEY:jm-devision-internal-2024}
+  api-key: ${INTERNAL_API_KEY:devision-internal-api-key-2024-secure}
   api-key-validation:
     enabled: ${INTERNAL_API_KEY_VALIDATION:true}
 
