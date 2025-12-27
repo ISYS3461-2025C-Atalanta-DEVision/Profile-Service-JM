@@ -15,30 +15,26 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class CompanyNameRequestListener {
 
-    private final ProfileRepository profileRepository;
-    private final KafkaTemplate<String, CompanyNameResponseEvent> companyNameResponseKafkaTemplate;
+        private final ProfileRepository profileRepository;
+        private final KafkaTemplate<String, CompanyNameResponseEvent> companyNameResponseKafkaTemplate;
 
-    @KafkaListener(
-            topics = "company-name.requests",
-            groupId = "profile-service",
-            containerFactory = "companyNameRequestListenerContainerFactory"
-    )
-    public void handleCompanyNameRequest(CompanyNameRequestEvent event) {
-        String companyId = event.getCompanyId();
-        log.info("Received company-name.request for companyId={} requestId={}",
-                 companyId, event.getRequestId());
+        @KafkaListener(topics = "company-name.requests", groupId = "profile-service", containerFactory = "companyNameRequestListenerContainerFactory")
+        public void handleCompanyNameRequest(CompanyNameRequestEvent event) {
+                String companyId = event.getCompanyId(); // actually user_id
+                log.info("Received company-name.request for companyId={} requestId={}", companyId,
+                                event.getRequestId());
 
-        String companyName = profileRepository.findById(companyId)
-                .map(Profile::getCompanyName)
-                .orElse(null);
+                String companyName = profileRepository.findByUserId(companyId)
+                                .map(Profile::getCompanyName)
+                                .orElse(null);
 
-        CompanyNameResponseEvent response = CompanyNameResponseEvent.builder()
-                .requestId(event.getRequestId())
-                .companyId(companyId)
-                .companyName(companyName)
-                .build();
+                CompanyNameResponseEvent response = CompanyNameResponseEvent.builder()
+                                .requestId(event.getRequestId())
+                                .companyId(companyId)
+                                .companyName(companyName)
+                                .build();
 
-        companyNameResponseKafkaTemplate.send("company-name.responses", companyId, response);
-        log.info("Sent company-name.response for companyId={} name={}", companyId, companyName);
-    }
+                companyNameResponseKafkaTemplate.send("company-name.responses", companyId, response);
+                log.info("Sent company-name.response for companyId={} name={}", companyId, companyName);
+        }
 }
