@@ -77,7 +77,7 @@ kafka:
 
 # Internal API Key Configuration (must match API Gateway)
 internal:
-  api-key: ${INTERNAL_API_KEY:devision-internal-api-key-2024-secure}
+  api-key: ${INTERNAL_API_KEY:devision-internal-api-key-2024}
   api-key-validation:
     enabled: ${INTERNAL_API_KEY_VALIDATION:true}
 
