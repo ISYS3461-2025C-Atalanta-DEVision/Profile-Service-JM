@@ -3,8 +3,11 @@ package com.devision.jm.profile.config;
 import com.devision.jm.profile.api.external.dto.CompanyNameEvent.CompanyNameRequestEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +26,32 @@ public class KafkaConsumerConfig {
 
     private final KafkaDiscoveryService kafkaDiscoveryService;
 
-@Bean
+    // SASL/SSL authentication for Confluent Cloud
+    @Value("${KAFKA_SECURITY_PROTOCOL:#{null}}")
+    private String securityProtocol;
+
+    @Value("${KAFKA_SASL_MECHANISM:#{null}}")
+    private String saslMechanism;
+
+    @Value("${KAFKA_SASL_USERNAME:#{null}}")
+    private String saslUsername;
+
+    @Value("${KAFKA_SASL_PASSWORD:#{null}}")
+    private String saslPassword;
+
+    private void addSaslConfig(Map<String, Object> configProps) {
+        if (securityProtocol != null && saslUsername != null && saslPassword != null) {
+            log.info("Configuring SASL/SSL authentication for Kafka Consumer");
+            configProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+            configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism != null ? saslMechanism : "PLAIN");
+            String jaasConfig = String.format(
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
+                saslUsername, saslPassword);
+            configProps.put(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig);
+        }
+    }
+
+    @Bean
     public ConsumerFactory<String, CompanyNameRequestEvent> companyNameRequestConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
@@ -44,6 +72,9 @@ public class KafkaConsumerConfig {
 
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "profile-service-group");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        addSaslConfig(props);
+
         return new DefaultKafkaConsumerFactory<>(props);
     }
 

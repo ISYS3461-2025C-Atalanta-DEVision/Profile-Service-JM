@@ -1,6 +1,8 @@
 package com.devision.jm.profile.config;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -50,6 +52,19 @@ public class KafkaConfig {
     @Value("${kafka.listener.auto-startup:true}")
     private boolean autoStartup;
 
+    // SASL/SSL authentication for Confluent Cloud
+    @Value("${KAFKA_SECURITY_PROTOCOL:#{null}}")
+    private String securityProtocol;
+
+    @Value("${KAFKA_SASL_MECHANISM:#{null}}")
+    private String saslMechanism;
+
+    @Value("${KAFKA_SASL_USERNAME:#{null}}")
+    private String saslUsername;
+
+    @Value("${KAFKA_SASL_PASSWORD:#{null}}")
+    private String saslPassword;
+
     @PostConstruct
     public void init() {
         String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
@@ -87,6 +102,17 @@ public class KafkaConfig {
         configProps.put(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG, 5000);
         configProps.put(ConsumerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG, 30000);
         configProps.put(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG, 5000);
+
+        // SASL/SSL authentication for Confluent Cloud
+        if (securityProtocol != null && saslUsername != null && saslPassword != null) {
+            log.info("Configuring SASL/SSL authentication for Kafka");
+            configProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+            configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism != null ? saslMechanism : "PLAIN");
+            String jaasConfig = String.format(
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
+                saslUsername, saslPassword);
+            configProps.put(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig);
+        }
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }

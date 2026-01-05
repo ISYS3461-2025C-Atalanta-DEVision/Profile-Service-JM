@@ -1,7 +1,10 @@
 package com.devision.jm.profile.config;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +35,30 @@ public class KafkaProducerConfig {
 
     private final KafkaDiscoveryService kafkaDiscoveryService;
 
+    // SASL/SSL authentication for Confluent Cloud
+    @Value("${KAFKA_SECURITY_PROTOCOL:#{null}}")
+    private String securityProtocol;
+
+    @Value("${KAFKA_SASL_MECHANISM:#{null}}")
+    private String saslMechanism;
+
+    @Value("${KAFKA_SASL_USERNAME:#{null}}")
+    private String saslUsername;
+
+    @Value("${KAFKA_SASL_PASSWORD:#{null}}")
+    private String saslPassword;
+
+    private void addSaslConfig(Map<String, Object> configProps) {
+        if (securityProtocol != null && saslUsername != null && saslPassword != null) {
+            configProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
+            configProps.put(SaslConfigs.SASL_MECHANISM, saslMechanism != null ? saslMechanism : "PLAIN");
+            String jaasConfig = String.format(
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
+                saslUsername, saslPassword);
+            configProps.put(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig);
+        }
+    }
+
     // 1) Basic String → String template (for existing EventServiceImpl)
 
     @Bean
@@ -46,6 +73,8 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
         configProps.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
+
+        addSaslConfig(configProps);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
@@ -72,6 +101,8 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
         configProps.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
 
+        addSaslConfig(configProps);
+
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -94,6 +125,8 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
         configProps.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
+
+        addSaslConfig(configProps);
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
