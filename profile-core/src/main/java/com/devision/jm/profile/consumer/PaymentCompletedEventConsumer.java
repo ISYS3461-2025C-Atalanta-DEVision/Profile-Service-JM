@@ -1,6 +1,7 @@
 package com.devision.jm.profile.consumer;
 
 import com.devision.jm.profile.api.internal.dto.PaymentCompletedEvent;
+import com.devision.jm.profile.api.internal.dto.SubscriptionChangedEvent;
 import com.devision.jm.profile.model.entity.Profile;
 import com.devision.jm.profile.model.enums.SubscriptionType;
 import com.devision.jm.profile.repository.ProfileRepository;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +39,11 @@ import java.time.LocalDateTime;
 @Transactional(rollbackFor = Exception.class)
 public class PaymentCompletedEventConsumer {
 
+    private static final String SUBSCRIPTION_CHANGED_TOPIC = "subscription.changed";
+
     private final ProfileRepository profileRepository;
     private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     /**
      * Consume PaymentCompletedEvent from Kafka
@@ -95,9 +100,34 @@ public class PaymentCompletedEventConsumer {
             log.info("SubscriptionEndDate: {}", savedProfile.getSubscriptionEndDate());
             log.info("======================================================");
 
+            // Publish subscription changed event for Applicant-Search-Service
+            publishSubscriptionChangedEvent(event.getUserId(), true);
+
         } catch (Exception e) {
             log.error("Failed to process PaymentCompletedEvent: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to process PaymentCompletedEvent", e);
+        }
+    }
+
+    /**
+     * Publish subscription changed event to Kafka
+     * Consumed by Applicant-Search-Service to update isPremium flag
+     */
+    private void publishSubscriptionChangedEvent(String companyId, boolean isPremium) {
+        try {
+            SubscriptionChangedEvent event = SubscriptionChangedEvent.builder()
+                    .companyId(companyId)
+                    .isPremium(isPremium)
+                    .subscriptionType(isPremium ? "PREMIUM" : "FREE")
+                    .changedAt(LocalDateTime.now())
+                    .build();
+
+            String json = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(SUBSCRIPTION_CHANGED_TOPIC, companyId, json);
+
+            log.info("Published subscription changed event: companyId={}, isPremium={}", companyId, isPremium);
+        } catch (Exception e) {
+            log.error("Failed to publish subscription changed event: {}", e.getMessage(), e);
         }
     }
 }
