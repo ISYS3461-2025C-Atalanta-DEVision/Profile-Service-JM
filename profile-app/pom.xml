@@ -15,14 +15,36 @@
     <description>Application module containing REST controllers and main class</description>
 
     <dependencies>
-        <!-- Internal Modules -->
+        <!--
+            PUBLIC API - Controllers can import from here
+            Contains: External DTOs, External interfaces
+        -->
         <dependency>
             <groupId>com.devision.jm</groupId>
             <artifactId>profile-api</artifactId>
         </dependency>
+
+        <!--
+            INTERNAL IMPLEMENTATION - Controllers CANNOT import from here!
+            scope=runtime means compile-time invisible, runtime-only available
+            Contains: Internal DTOs, Service implementations, Entities, Config
+        -->
         <dependency>
             <groupId>com.devision.jm</groupId>
             <artifactId>profile-core</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Spring Boot Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Data MongoDB for @EnableMongoAuditing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
 
         <!-- Spring Boot Actuator for health checks -->
