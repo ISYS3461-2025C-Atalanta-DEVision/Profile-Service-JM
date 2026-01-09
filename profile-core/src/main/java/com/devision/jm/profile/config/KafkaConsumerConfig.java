@@ -85,36 +85,4 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(companyNameRequestConsumerFactory());
         return factory;
     }
-
-    /**
-     * Consumer factory for String messages
-     * Used by SubscriptionNotificationConsumer
-     */
-    @Bean
-    public ConsumerFactory<String, String> stringConsumerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
-        log.info("Configuring String Kafka Consumer with bootstrap servers: {}", bootstrapServers);
-
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "profile-service-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
-        addSaslConfig(props);
-
-        return new DefaultKafkaConsumerFactory<>(props);
-    }
-
-    /**
-     * Kafka listener container factory for String messages
-     * Used by @KafkaListener annotations consuming String messages
-     */
-    @Bean(name = "kafkaListenerContainerFactory")
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(stringConsumerFactory());
-        return factory;
-    }
 }
