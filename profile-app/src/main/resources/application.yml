@@ -74,6 +74,8 @@ kafka:
     event-file-completed: event-file-completed
     avatar-file-upload: avatar-file-upload
     avatar-file-completed: avatar-file-completed
+    # Shard Migration (Requirement 3.3.1 - Ultimo)
+    shard-migration: profile.shard.migration
 
 # Internal API Key Configuration (must match API Gateway)
 internal:

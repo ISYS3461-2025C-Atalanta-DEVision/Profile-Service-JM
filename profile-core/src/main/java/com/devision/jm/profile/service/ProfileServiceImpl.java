@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
  * Implements requirements:
  * - 3.1.2: About Us, Who We Are Looking For
  * - 3.2.1: Company Logo
+ * - 3.3.1: Country change triggers shard migration (Ultimo)
  * - 6.2.1-6.2.4: Applicant Search Profile (Premium Feature)
  */
 @Slf4j
@@ -51,6 +53,7 @@ public class ProfileServiceImpl implements ProfileApi {
     private final ProfileRepository profileRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final ShardMigrationService shardMigrationService;
 
     @Value("${kafka.topics.avatar-file-upload:avatar-file-upload}")
     private String avatarFileUploadTopic;
@@ -95,6 +98,16 @@ public class ProfileServiceImpl implements ProfileApi {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found for userId: " + userId));
 
+        // ==================== Check for Country Change (3.3.1 Shard Migration) ====================
+        String previousCountry = profile.getCountry();
+        String newCountry = request.getCountry();
+        boolean countryChanged = newCountry != null && shardMigrationService.requiresMigration(previousCountry, newCountry);
+
+        if (countryChanged) {
+            log.info("Country change detected for userId: {}. Shard migration required. from={} to={}",
+                    userId, previousCountry, newCountry);
+        }
+
         // ==================== Basic Company Info ====================
         if (request.getCompanyName() != null) {
             profile.setCompanyName(request.getCompanyName());
@@ -113,9 +126,7 @@ public class ProfileServiceImpl implements ProfileApi {
         }
 
         // ==================== Location Info ====================
-        if (request.getCountry() != null) {
-            profile.setCountry(request.getCountry());
-        }
+        // Note: Country is handled separately for shard migration
         if (request.getCity() != null) {
             profile.setCity(request.getCity());
         }
@@ -139,7 +150,23 @@ public class ProfileServiceImpl implements ProfileApi {
             profile.setApplicantSearchProfile(searchProfile);
         }
 
-        Profile updatedProfile = profileRepository.save(profile);
+        // ==================== Handle Country Change with Shard Migration (3.3.1) ====================
+        Profile updatedProfile;
+        if (countryChanged) {
+            // Requirement 3.3.1 (Ultimo):
+            // If the company changes the Country field, the application logic must perform
+            // a data migration of the entire user record to the new, corresponding database shard.
+            updatedProfile = shardMigrationService.migrateProfileToNewShard(profile, previousCountry, newCountry);
+            log.info("Shard migration completed for userId: {}. New shard: {}",
+                    userId, shardMigrationService.getShardForCountry(newCountry));
+        } else {
+            // Normal save without shard migration
+            if (newCountry != null) {
+                profile.setCountry(newCountry);
+            }
+            updatedProfile = profileRepository.save(profile);
+        }
+
         log.info("Profile updated successfully for userId: {}", userId);
 
         return toProfileResponse(updatedProfile);
@@ -195,6 +222,16 @@ public class ProfileServiceImpl implements ProfileApi {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profile not found for userId: " + userId));
 
+        // ==================== Check for Country Change (3.3.1 Shard Migration) ====================
+        String previousCountry = profile.getCountry();
+        String newCountry = request.getCountry();
+        boolean countryChanged = shardMigrationService.requiresMigration(previousCountry, newCountry);
+
+        if (countryChanged) {
+            log.info("Country change detected in full update for userId: {}. Shard migration required. from={} to={}",
+                    userId, previousCountry, newCountry);
+        }
+
         // ==================== Email Update ====================
         String newEmail = request.getEmail();
         if (newEmail != null && !newEmail.equalsIgnoreCase(profile.getEmail())) {
@@ -210,7 +247,7 @@ public class ProfileServiceImpl implements ProfileApi {
         // ==================== Contact Info ====================
         profile.setCompanyName(request.getCompanyName());
         profile.setPhoneNumber(request.getPhoneNumber());
-        profile.setCountry(request.getCountry());
+        // Note: Country is handled separately for shard migration
         profile.setCity(request.getCity());
         profile.setStreetAddress(request.getStreetAddress());
 
@@ -218,7 +255,21 @@ public class ProfileServiceImpl implements ProfileApi {
         profile.setAboutUs(request.getAboutUs());
         profile.setWhoWeAreLookingFor(request.getWhoWeAreLookingFor());
 
-        Profile updatedProfile = profileRepository.save(profile);
+        // ==================== Handle Country Change with Shard Migration (3.3.1) ====================
+        Profile updatedProfile;
+        if (countryChanged) {
+            // Requirement 3.3.1 (Ultimo):
+            // If the company changes the Country field, the application logic must perform
+            // a data migration of the entire user record to the new, corresponding database shard.
+            updatedProfile = shardMigrationService.migrateProfileToNewShard(profile, previousCountry, newCountry);
+            log.info("Shard migration completed for userId: {}. New shard: {}",
+                    userId, shardMigrationService.getShardForCountry(newCountry));
+        } else {
+            // Normal save without shard migration
+            profile.setCountry(newCountry);
+            updatedProfile = profileRepository.save(profile);
+        }
+
         log.info("Profile fully updated for userId: {}", userId);
 
         return toProfileResponse(updatedProfile);

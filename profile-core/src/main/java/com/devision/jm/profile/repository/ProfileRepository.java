@@ -74,4 +74,10 @@ public interface ProfileRepository extends MongoRepository<Profile, String> {
      * Find profiles by subscription type
      */
     List<Profile> findBySubscriptionType(SubscriptionType subscriptionType);
+
+    /**
+     * Delete profile by userId
+     * Used when a user is deleted from Auth Service
+     */
+    void deleteByUserId(String userId);
 }

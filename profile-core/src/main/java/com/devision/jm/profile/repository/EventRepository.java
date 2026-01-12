@@ -56,4 +56,12 @@ public interface EventRepository extends MongoRepository<Event, String> {
      * @param eventId Business event ID
      */
     void deleteByEventId(String eventId);
+
+    /**
+     * Delete all events by company ID
+     * Used when a company/user is deleted from Auth Service
+     *
+     * @param companyId Company ID (Profile.userId)
+     */
+    void deleteByCompanyId(String companyId);
 }
