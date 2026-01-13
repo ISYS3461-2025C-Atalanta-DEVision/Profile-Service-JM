@@ -1,6 +1,7 @@
 package com.devision.jm.profile.config;
 
 import com.devision.jm.profile.api.external.dto.CompanyNameEvent.CompanyNameRequestEvent;
+import com.devision.jm.profile.api.external.dto.PremiumStatusEvent.PremiumStatusRequestEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -83,6 +84,40 @@ public class KafkaConsumerConfig {
 
         ConcurrentKafkaListenerContainerFactory<String, CompanyNameRequestEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(companyNameRequestConsumerFactory());
+        return factory;
+    }
+
+    // === Premium Status Request Consumer ===
+
+    @Bean
+    public ConsumerFactory<String, PremiumStatusRequestEvent> premiumStatusRequestConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        String bootstrapServers = kafkaDiscoveryService.getKafkaBootstrapServers();
+        log.info("Configuring PremiumStatusRequest Kafka Consumer with bootstrap servers: {}", bootstrapServers);
+
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE,
+                "com.devision.jm.profile.api.external.dto.PremiumStatusEvent.PremiumStatusRequestEvent");
+        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+
+        props.put(JsonDeserializer.TRUSTED_PACKAGES,
+                "com.devision.jm.profile.api.external.dto.PremiumStatusEvent");
+
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "profile-service-group");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        addSaslConfig(props);
+
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean(name = "premiumStatusRequestListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, PremiumStatusRequestEvent> premiumStatusRequestListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PremiumStatusRequestEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(premiumStatusRequestConsumerFactory());
         return factory;
     }
 }
